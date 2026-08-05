@@ -1,0 +1,78 @@
+name: OCI Capacity Watcher
+
+# Ogni 5 minuti (minimo consentito da GitHub Actions) prova UNA VOLTA a creare la VM.
+# Se non c'e' capacita' (l'esito piu' comune) il job termina normalmente (verde), non fallisce:
+# solo un errore VERO (permessi, config) fa fallire il job e mostra la X rossa in Actions.
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch: {}   # per lanciarlo manualmente da Actions > Run workflow
+
+permissions:
+  contents: write   # serve per ricommittare log/risultato nel repo
+
+concurrency:
+  group: capacity-watcher
+  cancel-in-progress: false   # non sovrapporre due run se uno impiega piu' di 5 minuti
+
+jobs:
+  try-launch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Salta se gia' riuscito in un run precedente
+        id: check
+        run: |
+          if [ -f capacity_watcher_result.json ]; then
+            echo "L'istanza risulta gia' creata (capacity_watcher_result.json presente). Non riprovo."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Set up Python
+        if: steps.check.outputs.skip == 'false'
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Installa OCI SDK
+        if: steps.check.outputs.skip == 'false'
+        run: pip install --quiet oci
+
+      - name: Configura credenziali OCI (dalla chiave nei GitHub Secrets)
+        if: steps.check.outputs.skip == 'false'
+        run: |
+          mkdir -p ~/.oci
+          cat > ~/.oci/oci_api_key.pem <<'PEMEOF'
+          ${{ secrets.OCI_API_KEY_PEM }}
+          PEMEOF
+          chmod 600 ~/.oci/oci_api_key.pem
+          cat > ~/.oci/config <<CFGEOF
+          [DEFAULT]
+          user=ocid1.user.oc1..aaaaaaaafzkl6qlpe74lwxntj2lqvwykphjlzjznep7e3lyyc7nsnv4zkqsq
+          fingerprint=d8:ca:ec:0f:de:0b:c4:f1:56:18:f5:80:d6:4e:7d:82
+          tenancy=ocid1.tenancy.oc1..aaaaaaaa4x3sgp7cb5goax3pi4vh77njeczfsgpyp4by534rayifgjyjvrbq
+          region=eu-milan-1
+          key_file=$HOME/.oci/oci_api_key.pem
+          CFGEOF
+
+      - name: Prova a creare l'istanza (un solo tentativo)
+        if: steps.check.outputs.skip == 'false'
+        run: python capacity_watcher.py --single-attempt
+
+      - name: Rimuovi le credenziali dal runner (non servono piu' in questo job)
+        if: steps.check.outputs.skip == 'false'
+        run: rm -rf ~/.oci
+
+      - name: Salva log/risultato nel repo
+        if: steps.check.outputs.skip == 'false'
+        run: |
+          git config user.name "capacity-watcher-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add capacity_watcher.log capacity_watcher_result.json 2>/dev/null || true
+          if ! git diff --staged --quiet; then
+            git commit -m "watcher: aggiornamento tentativo $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            git push
+          fi
