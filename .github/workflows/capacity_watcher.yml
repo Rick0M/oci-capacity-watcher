@@ -71,8 +71,14 @@ jobs:
         run: |
           git config user.name "capacity-watcher-bot"
           git config user.email "actions@users.noreply.github.com"
-          git add capacity_watcher.log capacity_watcher_result.json 2>/dev/null || true
+          # git add su piu' pathspec, se anche uno solo non esiste (es. result.json prima del
+          # successo), puo' far fallire l'intero comando e non aggiungere NESSUN file: si
+          # aggiungono percio' separatamente.
+          [ -f capacity_watcher.log ] && git add capacity_watcher.log
+          [ -f capacity_watcher_result.json ] && git add capacity_watcher_result.json
           if ! git diff --staged --quiet; then
             git commit -m "watcher: aggiornamento tentativo $(date -u +%Y-%m-%dT%H:%M:%SZ)"
             git push
+          else
+            echo "Nessuna modifica da committare."
           fi
