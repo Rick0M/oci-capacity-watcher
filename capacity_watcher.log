@@ -70,3 +70,6 @@
 2026-08-07T14:18:32  Avvio: shape=VM.Standard.A1.Flex ocpus=2 mem=12GB AD=Heda:EU-MILAN-1-AD-1
 2026-08-07T14:18:33  Tentativo #1: nessuna capacita' disponibile (status 500). Riprovo tra 130s...
 2026-08-07T14:18:33  Modalita' --single-attempt: mi fermo qui.
+2026-08-07T15:14:18  Avvio: shape=VM.Standard.A1.Flex ocpus=2 mem=12GB AD=Heda:EU-MILAN-1-AD-1
+2026-08-07T15:14:19  Tentativo #1: nessuna capacita' disponibile (status 500). Riprovo tra 132s...
+2026-08-07T15:14:19  Modalita' --single-attempt: mi fermo qui.
