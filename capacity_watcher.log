@@ -1183,3 +1183,7 @@
 2026-08-19T02:23:07  Avvio: shape=VM.Standard.A1.Flex ocpus=2 mem=12GB AD=Heda:EU-MILAN-1-AD-1
 2026-08-19T02:23:09  Tentativo #1: nessuna capacita' disponibile (status 500). Riprovo tra 139s...
 2026-08-19T02:23:09  Modalita' --single-attempt: mi fermo qui.
+2026-08-19T03:23:47  Avvio: shape=VM.Standard.A1.Flex ocpus=2 mem=12GB AD=Heda:EU-MILAN-1-AD-1
+2026-08-19T03:23:49  SUCCESSO al tentativo #1! Instance OCID: ocid1.instance.oc1.eu-milan-1.anwgsljrtniuuiacm2i45ea44xpvimytvutqxnrpehhznva4ptafj22zqhna  stato: PROVISIONING
+2026-08-19T03:24:00  IP pubblico assegnato: 130.110.17.5
+2026-08-19T03:24:00  Connettiti con: ssh -i C:\Users\x\.ssh\id_ed25519 ubuntu@130.110.17.5
